@@ -18,6 +18,7 @@
 #include <CesiumUtility/JsonHelpers.h>
 #include <CesiumUtility/Uri.h>
 #include <CesiumUtility/joinToString.h>
+#include <Cesium3DTilesContent/registerAllTileContentTypes.h>
 
 #include <rapidjson/document.h>
 #include <spdlog/logger.h>
@@ -914,6 +915,8 @@ TilesetJsonLoader::loadTileContent(const TileLoadInput& loadInput) {
               TileLoadResult::createFailedResult(std::move(pCompletedRequest)));
         }
 
+        registerAllTileContentTypes();
+        
         uint16_t statusCode = pResponse->statusCode();
         if (statusCode != 0 && (statusCode < 200 || statusCode >= 300)) {
           SPDLOG_LOGGER_ERROR(
