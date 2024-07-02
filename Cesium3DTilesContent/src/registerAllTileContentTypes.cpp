@@ -5,10 +5,12 @@
 #include <Cesium3DTilesContent/I3dmToGltfConverter.h>
 #include <Cesium3DTilesContent/PntsToGltfConverter.h>
 #include <Cesium3DTilesContent/registerAllTileContentTypes.h>
+#include <spdlog/spdlog.h>
 
 namespace Cesium3DTilesContent {
 
 void registerAllTileContentTypes() {
+  SPDLOG_INFO("Registering all content types");
   GltfConverters::registerMagic("glTF", BinaryToGltfConverter::convert);
   GltfConverters::registerMagic("b3dm", B3dmToGltfConverter::convert);
   GltfConverters::registerMagic("cmpt", CmptToGltfConverter::convert);

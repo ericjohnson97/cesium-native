@@ -2,7 +2,13 @@
 #include <CesiumAsync/IAssetResponse.h>
 #include <CesiumUtility/Uri.h>
 
+#include <gsl/span>
 #include <spdlog/spdlog.h>
+#include <string>
+#include <unordered_map>
+#include <cstddef> // For std::byte
+#include <sstream>
+#include <iomanip>
 
 using namespace CesiumUtility;
 
@@ -121,19 +127,42 @@ GltfConverters::ConverterFunction GltfConverters::getConverterByFileExtension(
   return nullptr;
 }
 
-GltfConverters::ConverterFunction GltfConverters::getConverterByMagic(
-    const gsl::span<const std::byte>& content,
-    std::string& magic) {
-  if (content.size() >= 4) {
-    magic = std::string(reinterpret_cast<const char*>(content.data()), 4);
-    auto converterIter = _loadersByMagic.find(magic);
-    if (converterIter != _loadersByMagic.end()) {
-      return converterIter->second;
+std::string toHexString(const std::string& input) {
+    std::ostringstream oss;
+    for (char c : input) {
+        oss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(static_cast<unsigned char>(c));
     }
-  }
-
-  return nullptr;
+    return oss.str();
 }
+
+GltfConverters::ConverterFunction GltfConverters::getConverterByMagic(const gsl::span<const std::byte>& content, std::string& magic) {
+    // Log the size of the content
+    SPDLOG_INFO("Content size: {}", content.size());
+
+    if (content.size() >= 4) {
+        magic = std::string(reinterpret_cast<const char*>(content.data()), 4);
+
+        // Log the magic string
+        SPDLOG_INFO("Magic string: {}", magic);
+
+        auto converterIter = _loadersByMagic.find(magic);
+        if (converterIter != _loadersByMagic.end()) {
+            // Log the successful find of the converter
+            SPDLOG_INFO("Converter found for magic string: {}", magic);
+            return converterIter->second;
+        } else {
+            // Log that no converter was found
+            SPDLOG_WARN("No converter found for magic string: {} (hex: {})", magic, toHexString(magic));
+        }
+    } else {
+        // Log the insufficient size
+        SPDLOG_WARN("Content size less than 4 bytes, cannot extract magic string");
+    }
+
+    return nullptr;
+}
+
+
 
 CesiumAsync::Future<AssetFetcherResult>
 AssetFetcher::get(const std::string& relativeUrl) const {
